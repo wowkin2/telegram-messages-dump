@@ -27,6 +27,7 @@ from telegram_messages_dump.exporter_context import ExporterContext
 
 class TelegramDumper(TelegramClient):
     """ Authenticates and opens new session. Retrieves message history for a chat. """
+    BUFFER_SIZE = 1000
 
     def __init__(self, session_user_id, settings, metadata, exporter):
 
@@ -247,7 +248,7 @@ class TelegramDumper(TelegramClient):
 
     def _do_dump(self, peer):
         """ Retrieves messages in small chunks (Default: 100) and saves them in in-memory 'buffer'.
-            When buffer reaches '1000' messages they are saved into intermediate temp file.
+            When buffer reaches BUFFER_SIZE messages they are saved into intermediate temp file.
             In the end messages from all the temp files are being moved into resulting file in
             ascending order along with the remaining ones in 'buffer'.
             After all, temp files are deleted.
@@ -265,7 +266,7 @@ class TelegramDumper(TelegramClient):
 
         # Current buffer of messages, that will be batched into a temp file
         # or otherwise written directly into the resulting file if there are too few of them
-        # to form a batch of size 1000.
+        # to form a batch of size BUFFER_SIZE.
         buffer = deque()
 
         # Delete old metafile in Continue mode
@@ -284,7 +285,7 @@ class TelegramDumper(TelegramClient):
                 latest_message_id_fetched = self._fetch_messages_from_server(
                     peer, buffer)
 
-                # This is for the case when buffer with fewer than 1000 records
+                # This is for the case when buffer with fewer than BUFFER_SIZE records
                 # Relies on the fact that `_fetch_messages_from_server` returns messages
                 # in reverse order
                 if self.cur_latest_message_id < latest_message_id_fetched:
@@ -292,7 +293,7 @@ class TelegramDumper(TelegramClient):
                 # when buffer is full, flush it into a temp file
                 # Assume that once a message got into temp file it will be counted as successful
                 # 'output_total_count'. This has to be improved.
-                if len(buffer) >= 1000:
+                if len(buffer) >= self.BUFFER_SIZE:
                     self._flush_buffer_in_temp_file(buffer)
                     temp_files_list_meta.append(latest_message_id_fetched)
                 # break if the very beginning of channel history is reached
@@ -352,7 +353,7 @@ class TelegramDumper(TelegramClient):
     def _merge_temp_files_into_final(self, resulting_file, temp_files_list_meta):
         """ merge all temp files into final one and delete them """
         while self.temp_files_list:
-            tf = self.temp_files_list.popleft()
+            tf = self.temp_files_list.pop()
             with codecs.open(tf.name, 'r', 'utf-8') as ctf:
                 for line in ctf.readlines():
                     print(line, file=resulting_file, end='')
@@ -361,7 +362,7 @@ class TelegramDumper(TelegramClient):
             tf.close()
             os.remove(tf.name)
             # update the latest_message_id metadata
-            batch_latest_message_id = temp_files_list_meta.popleft()
+            batch_latest_message_id = temp_files_list_meta.pop()
             if batch_latest_message_id > self.cur_latest_message_id:
                 self.cur_latest_message_id = batch_latest_message_id
 

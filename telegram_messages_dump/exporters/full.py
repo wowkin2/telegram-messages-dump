@@ -36,16 +36,16 @@ class full(object):
         name, _, content, re_id, is_sent_by_bot, is_contains_media, media_content = common.extract_message_data(msg)
 
         msg_dictionary = {
-            'action': msg.action.to_dict() if msg.action else None,  # MessageActionChatAddUser(users=[1234567])
-            'message': msg.message,
             'message_id': msg.id,
+            'message': msg.message,
             'from_id': msg.from_id,
+            'author': name,
             'from_username': msg.sender.username,
             # 'reply_id': re_id,
             'reply_to_msg_id': msg.reply_to_msg_id,
-            'author': name,
             'sent_by_bot': is_sent_by_bot,
             'date': msg.date,
+            'action': msg.action.to_dict() if msg.action else None,  # MessageActionChatAddUser(users=[1234567])
             'content': content,
             'contains_media': is_contains_media,
             'media_content': media_content
