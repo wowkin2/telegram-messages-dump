@@ -39,7 +39,7 @@ Where:
       ,  --continue Continue previous dump. Supports optional integer param <message_id>.
     -l,  --limit    Number of the latest messages to dump, 0 means no limit. (Default: 100)
     -cl, --clean    Clean session sensitive data (e.g. auth token) on exit. (Default: False)
-    -v,  --verbose  Verbose mode. (Default: False)
+    -v,  --verbose  Verbose logging mode. (Default: False)
       ,  --addbom   Add BOM to the beginning of the output file. (Default: False)
     -h,  --help     Show this help message and exit.
 ```
@@ -72,7 +72,7 @@ In both aforementioned cases, `telegram-messages-dump` will open the existing `C
 
 ## Plugins
 
-Output format is managed by *exporter* plugins. Currently there are two exporters available: **text**, **jsonl** and **csv**.
+Output format is managed by *exporter* plugins. Currently there are 4 exporters available: **text**, **jsonl**, **csv** and **full**.
 Exporters reside in `./exporters` subfolder. 
 Basically an exporter is a class that implements three methods:
 - `format(...)` that extracts all necessary data from a message and stringifies it.

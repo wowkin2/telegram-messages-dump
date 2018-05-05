@@ -51,6 +51,7 @@ class TelegramDumper(TelegramClient):
         # The context that will be passed to the exporter
         self.exporter_context = ExporterContext()
         self.exporter_context.is_continue_mode = self.settings.is_incremental_mode
+        self.exporter_context.tg_client = self
 
         # How many massages user wants to be dumped
         # explicit --limit, or default of 100 or unlimited (int.Max)
