@@ -15,12 +15,11 @@ ESCAPE_DICT = {
 }
 
 
-
 # pylint: disable=too-few-public-methods
 class common(object):
     """ json exporter plugin.
         By convention it has to be called exactly the same as its file name.
-        (Apart from .py extention)
+        (Apart from .py extension)
     """
 
     def __init__(self):

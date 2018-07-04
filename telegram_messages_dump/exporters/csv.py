@@ -8,7 +8,7 @@ from .common import common
 class csv(object):
     """ csv (comma separated values) exporter plugin.
         By convention it has to be called exactly the same as its file name.
-        (Apart from .py extention)
+        (Apart from .py extension)
     """
 
     # pylint: disable=unused-argument

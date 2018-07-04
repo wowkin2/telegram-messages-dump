@@ -11,6 +11,7 @@ class ChatDumpSettings:
 
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
+    # pylint: disable=too-many-statements
     def __init__(self, usage):
 
         # From telegram-cli

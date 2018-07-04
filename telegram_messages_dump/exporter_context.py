@@ -14,4 +14,3 @@ class ExporterContext:
         self.is_last_record = True
         # Is working in continue/incremental mode
         self.is_continue_mode = False
-

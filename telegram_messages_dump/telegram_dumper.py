@@ -146,7 +146,7 @@ class TelegramDumper(TelegramClient):
         """
         name = self.settings.chat_name
 
-        # For private channуls try to resolve channel peer object from its invitation link
+        # For private channels try to resolve channel peer object from its invitation link
         # Note: it will only work if the login user has already joined the private channel.
         # Otherwise, get_entity will throw ValueError
         if name.startswith(JOIN_CHAT_PREFIX_URL):
@@ -184,7 +184,7 @@ class TelegramDumper(TelegramClient):
 
         # Search in dialogs first, this way we will find private groups and
         # channels.
-        self.logger.debug('Fetch loggedin user`s dialogs')
+        self.logger.debug('Fetch logged in user`s dialogs')
         dialogs_count = self.get_dialogs(0).total
         self.logger.info('%s user`s dialogs found', dialogs_count)
         dialogs = self.get_dialogs(limit=None)
