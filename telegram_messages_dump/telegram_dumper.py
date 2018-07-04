@@ -37,7 +37,7 @@ class TelegramDumper(TelegramClient):
         super().__init__(session_user_id,
                          settings.api_id,
                          settings.api_hash,
-                         connection_mode=ConnectionTcpFull,
+                         connection=ConnectionTcpFull,
                          proxy=None,
                          update_workers=1)
 
