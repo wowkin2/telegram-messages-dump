@@ -75,7 +75,7 @@ In both aforementioned cases, `telegram-messages-dump` will open the existing `C
 
 ## Plugins
 
-Output format is managed by *exporter* plugins. Currently there are 4 exporters available: **text**, **jsonl**, **csv** and **full**.
+Output format is managed by *exporter* plugins. Currently there are 3 exporters available: **text**, **jsonl** and **csv**.
 Exporters reside in `./exporters` subfolder. 
 Basically an exporter is a class that implements three methods:
 - `format(...)` that extracts all necessary data from a message and stringifies it.

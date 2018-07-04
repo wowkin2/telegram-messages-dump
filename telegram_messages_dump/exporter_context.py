@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 
+
 class ExporterContext:
     """ Exporter context """
 
@@ -14,6 +15,4 @@ class ExporterContext:
         self.is_last_record = True
         # Is working in continue/incremental mode
         self.is_continue_mode = False
-        # TelegramClient instance
-        self.tg_client = None
 
