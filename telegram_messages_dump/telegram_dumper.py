@@ -13,11 +13,8 @@ import logging
 from collections import deque
 from getpass import getpass
 from time import sleep
-from telethon import TelegramClient, ConnectionMode
-from telethon.errors import SessionPasswordNeededError
-from telethon.errors.rpc_error_list import FloodWaitError
-from telethon.errors.rpc_error_list import UsernameNotOccupiedError
-from telethon.errors.rpc_error_list import UsernameInvalidError
+from telethon import TelegramClient
+from telethon.errors import FloodWaitError, SessionPasswordNeededError, UsernameNotOccupiedError, UsernameInvalidError
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telegram_messages_dump.utils import sprint
 from telegram_messages_dump.exceptions import DumpingError
@@ -36,9 +33,7 @@ class TelegramDumper(TelegramClient):
         super().__init__(session_user_id,
                          settings.api_id,
                          settings.api_hash,
-                         connection_mode=ConnectionMode.TCP_FULL,
-                         proxy=None,
-                         update_workers=1)
+                         proxy=None)
 
         # Settings as specified by user or defaults or from metadata
         self.settings = settings
@@ -80,8 +75,7 @@ class TelegramDumper(TelegramClient):
                 chatObj = self._getChannel()
             except ValueError as ex:
                 ret_code = 1
-                self.logger.error('%s', ex,
-                              exc_info=self.logger.level > logging.INFO)
+                self.logger.error('%s', ex, exc_info=self.logger.level > logging.INFO)
                 return
             # Fetch history in chunks and save it into a resulting file
             self._do_dump(chatObj)
