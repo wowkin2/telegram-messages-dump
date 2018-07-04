@@ -17,6 +17,7 @@ from telethon import TelegramClient
 from telethon.errors import FloodWaitError, SessionPasswordNeededError, UsernameNotOccupiedError, UsernameInvalidError
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telegram_messages_dump.utils import sprint
+from telegram_messages_dump.utils import JOIN_CHAT_PREFIX_URL
 from telegram_messages_dump.exceptions import DumpingError
 from telegram_messages_dump.exceptions import MetadataError
 from telegram_messages_dump.exporter_context import ExporterContext
@@ -139,6 +140,23 @@ class TelegramDumper(TelegramClient):
             at Telegram server
         """
         name = self.settings.chat_name
+
+        # For private channуls try to resolve channel peer object from its invitation link
+        # Note: it will only work if the login user has already joined the private channel.
+        # Otherwise, get_entity will throw ValueError
+        if name.startswith(JOIN_CHAT_PREFIX_URL):
+            self.logger.debug('Trying to resolve as invite url.')
+            try:
+                peer = self.get_entity(name)
+                if peer:
+                    sprint('Invitation link "{}" resolved into channel id={}'.format(
+                        name, peer.id))
+                    return peer
+            except ValueError as ex:
+                self.logger.debug('Failed to resolve "%s" as an invitation link. %s',
+                                  self.settings.chat_name,
+                                  ex,
+                                  exc_info=self.logger.level > logging.INFO)
 
         if name.startswith('@'):
             name = name[1:]
