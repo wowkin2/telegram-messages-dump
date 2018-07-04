@@ -6,6 +6,7 @@ import json
 from datetime import date, datetime
 from .common import common
 
+
 class jsonl(object):
     """ jsonl exporter plugin.
 

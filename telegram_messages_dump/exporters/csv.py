@@ -5,6 +5,7 @@
 import re
 from .common import common
 
+
 class csv(object):
     """ csv (comma separated values) exporter plugin.
         By convention it has to be called exactly the same as its file name.
@@ -47,7 +48,8 @@ class csv(object):
                                  '"' + str(self._py_encode_basestring(content)) + '"'])
         return msg_dump_str
 
-    def begin_final_file(self, resulting_file, exporter_context):
+    @staticmethod
+    def begin_final_file(resulting_file, exporter_context):
         """ Hook executes at the beginning of writing a resulting file.
             (After BOM is written in case of --addbom)
         """
@@ -60,6 +62,7 @@ class csv(object):
         """Return a JSON representation of a Python string"""
         if not s:
             return s
+
         def replace(match):
             return self.ESCAPE_DICT[match.group(0)]
         return self.ESCAPE.sub(replace, s)

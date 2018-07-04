@@ -5,6 +5,7 @@
 import re
 from .common import common
 
+
 class text(object):
     """ text exporter plugin.
         By convention it has to be called exactly the same as its file name.
@@ -54,6 +55,7 @@ class text(object):
         """Return a JSON representation of a Python string"""
         if not s:
             return s
+
         def replace(match):
             return self.ESCAPE_DICT[match.group(0)]
         return self.ESCAPE.sub(replace, s)

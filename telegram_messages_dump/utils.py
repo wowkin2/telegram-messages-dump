@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """ Various utility functions/classes """
 
+
 def sprint(string, *args, **kwargs):
     """Safe Print (handle UnicodeEncodeErrors on some terminals)"""
     try:
