@@ -14,7 +14,9 @@ from collections import deque
 from getpass import getpass
 from time import sleep
 from telethon import TelegramClient
-from telethon.errors import FloodWaitError, SessionPasswordNeededError, UsernameNotOccupiedError, UsernameInvalidError
+from telethon.network import ConnectionTcpFull
+from telethon.errors import \
+  FloodWaitError, SessionPasswordNeededError, UsernameNotOccupiedError, UsernameInvalidError
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telegram_messages_dump.utils import sprint
 from telegram_messages_dump.utils import JOIN_CHAT_PREFIX_URL
@@ -23,6 +25,7 @@ from telegram_messages_dump.exceptions import MetadataError
 from telegram_messages_dump.exporter_context import ExporterContext
 
 
+# pylint: disable=too-many-instance-attributes
 class TelegramDumper(TelegramClient):
     """ Authenticates and opens new session. Retrieves message history for a chat. """
     BUFFER_SIZE = 1000
@@ -34,7 +37,9 @@ class TelegramDumper(TelegramClient):
         super().__init__(session_user_id,
                          settings.api_id,
                          settings.api_hash,
-                         proxy=None)
+                         connection_mode=ConnectionTcpFull,
+                         proxy=None,
+                         update_workers=1)
 
         # Settings as specified by user or defaults or from metadata
         self.settings = settings
@@ -60,7 +65,7 @@ class TelegramDumper(TelegramClient):
         # A list of paths to the temp files
         self.temp_files_list = deque()
 
-        # Actual lattets message id that was prossessed since the dumper started running
+        # Actual latest message id that was processed since the dumper started running
         self.cur_latest_message_id = self.settings.last_message_id
 
         # The number of messages written into a resulting file de-facto
@@ -73,13 +78,13 @@ class TelegramDumper(TelegramClient):
         try:
             self._init_connect()
             try:
-                chatObj = self._getChannel()
+                chat_obj = self._get_channel()
             except ValueError as ex:
                 ret_code = 1
                 self.logger.error('%s', ex, exc_info=self.logger.level > logging.INFO)
-                return
+                return ret_code
             # Fetch history in chunks and save it into a resulting file
-            self._do_dump(chatObj)
+            self._do_dump(chat_obj)
         except (DumpingError, MetadataError) as ex:
             self.logger.error('%s', ex, exc_info=self.logger.level > logging.INFO)
             ret_code = 1
@@ -135,7 +140,7 @@ class TelegramDumper(TelegramClient):
                                  "Please enter your password: ")
                     self_user = self.sign_in(password=pw)
 
-    def _getChannel(self):
+    def _get_channel(self):
         """ Returns telethon.tl.types.Channel object resolved from chat_name
             at Telegram server
         """
@@ -337,7 +342,8 @@ class TelegramDumper(TelegramClient):
             self.output_total_count += self._flush_buffer_into_filestream(buffer, tf)
             self.temp_files_list.append(tf)
 
-    def _flush_buffer_into_filestream(self, buffer, file_stream):
+    @staticmethod
+    def _flush_buffer_into_filestream(buffer, file_stream):
         """ Flush buffer into a file stream """
         count = 0
         while buffer:
@@ -382,7 +388,7 @@ class TelegramDumper(TelegramClient):
         """ Check preconditions before processing data """
         out_file_path = self.settings.out_file
         if self.settings.is_incremental_mode:
-            # In incrimental mode
+            # In incremental mode
             sprint('Switching to incremental mode.')
             self.logger.debug('Checking if output file exists.')
             if not os.path.exists(out_file_path):
@@ -391,7 +397,7 @@ class TelegramDumper(TelegramClient):
             sprint('Dumping messages newer than {} using "{}" dumper.'
                    .format(self.settings.last_message_id, self.settings.exporter))
         else:
-            # In NONE-incrimental mode
+            # In NONE-incremental mode
             if os.path.exists(out_file_path):
                 sprint('Warning: The output file already exists.')
                 if not self._is_user_confirmed('Are you sure you want to overwrite it? [y/n]'):
@@ -411,6 +417,6 @@ class TelegramDumper(TelegramClient):
         """ Get confirmation from user """
         if self.settings.is_quiet_mode:
             return True
-        continueResponse = input(msg).lower().strip()
-        return continueResponse == 'y'\
-            or continueResponse == 'yes'
+        continue_response = input(msg).lower().strip()
+        return continue_response == 'y'\
+            or continue_response == 'yes'

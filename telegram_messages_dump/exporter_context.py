@@ -6,7 +6,6 @@
 class ExporterContext:
     """ Exporter context """
 
-    # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
     def __init__(self):
         # Is processing the first record

@@ -15,11 +15,6 @@ class jsonl(object):
 
     See http://jsonlines.org.
     """
-    # pylint: disable=no-self-use
-
-    def __init__(self):
-        """ constructor """
-        pass
 
     # pylint: disable=unused-argument
     def format(self, msg, exporter_context):
@@ -29,10 +24,10 @@ class jsonl(object):
 
             :returns: *one-line* string containing one message data.
         """
-        # pylint: disable=line-too-long
-        name, _, content, re_id, is_sent_by_bot, is_contains_media, media_content = common.extract_message_data(msg)
+        name, _, content, re_id, is_sent_by_bot, is_contains_media, media_content = \
+            common.extract_message_data(msg)
 
-        msgDictionary = {
+        msg_dictionary = {
             'message_id': msg.id,
             'from_id': msg.from_id,
             'reply_id': re_id,
@@ -44,16 +39,18 @@ class jsonl(object):
             'media_content': media_content
         }
         msg_dump_str = json.dumps(
-            msgDictionary, default=self._json_serial, ensure_ascii=False)
+            msg_dictionary, default=self._json_serial, ensure_ascii=False)
         return msg_dump_str
 
-    def begin_final_file(self, resulting_file, exporter_context):
+    @staticmethod
+    def begin_final_file(resulting_file, exporter_context):
         """ Hook executes at the beginning of writing a resulting file.
             (After BOM is written in case of --addbom)
         """
         pass
 
-    def _json_serial(self, obj):
+    @staticmethod
+    def _json_serial(obj):
         """JSON serializer for objects not serializable by default json code
            https://stackoverflow.com/questions/11875770/how-to-overcome-datetime-datetime-not-json-serializable
         """

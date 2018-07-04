@@ -25,13 +25,13 @@ class DumpMetadata:
     def merge_into_settings(self, settings):
         """ Get exporter name from metadata"""
         if not self._meta_dict:
-            self._loadFromFile()
+            self._load_from_file()
 
         settings.chat_name = self._meta_dict[DumpMetadata.CHAT_NAME]
         settings.last_message_id = self._meta_dict[DumpMetadata.LAST_MESSAGE_ID]
         settings.exporter = self._meta_dict[DumpMetadata.EXPORTER]
 
-    def _loadFromFile(self):
+    def _load_from_file(self):
         """ Loads metadata from file """
         try:
             self.logger.debug('Load metafile %s.', self.meta_file_path)
