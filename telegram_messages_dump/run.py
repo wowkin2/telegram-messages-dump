@@ -83,4 +83,3 @@ def _load_exporter(exporter_name):
         sprint("ERROR: Failed to load class '%s' out of './exporters/%s'."
                % (exporter_name, exporter_file_name))
         exit(1)
-
