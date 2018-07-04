@@ -28,7 +28,7 @@ class full(object):
             :returns: *one-line* string containing one message data.
         """
         # pylint: disable=line-too-long
-        name, _, content, re_id, is_sent_by_bot, is_contains_media, media_content = \
+        name, _, content, _, is_sent_by_bot, is_contains_media, media_content = \
             common.extract_message_data(msg)
 
         msg_dictionary = {
