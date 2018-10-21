@@ -26,11 +26,19 @@ class csv(object):
         #     msg.date.year, msg.date.month, msg.date.day,
         #     msg.date.hour, msg.date.minute, msg.id, "RE_ID=%s " % re_id if re_id else "",
         #     name, self._py_encode_basestring(content))
+
+        name, isNameModified = self._py_encode_basestring(name)
+
+        # Check if name contains ',' or there were other special chars.
+        # If it does surround the name with quotes.
+        if name and (name.find(",") != -1 or isNameModified):
+            name = '"' + name + '"'
+
         msg_dump_str = ",".join([str(msg.id),
                                  msg.date.isoformat(),
                                  name,
                                  str(re_id),
-                                 '"' + str(common.py_encode_basestring(content)) + '"'])
+                                 '"' + str(self._py_encode_basestring(content)[0]) + '"'])
         return msg_dump_str
 
     @staticmethod
@@ -41,3 +49,15 @@ class csv(object):
         if not exporter_context.is_continue_mode:
             header_str = ",".join(["Message Id", "Time", "Sender Name", "Reply Id", "Message"])
             print(header_str, file=resulting_file)
+
+    # This code is inspired by Python's json encoder's code
+    def _py_encode_basestring(self, s):
+        """Return a JSON representation of a Python string"""
+        if not s:
+            return s, False
+        isAnyCharReplaced = False
+        def replace(match):
+            nonlocal isAnyCharReplaced
+            isAnyCharReplaced = True
+            return self.ESCAPE_DICT[match.group(0)]
+        return str(self.ESCAPE.sub(replace, s)), isAnyCharReplaced
