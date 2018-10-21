@@ -23,8 +23,10 @@ from telegram_messages_dump.exceptions import MetadataError
 from telegram_messages_dump.exporter_context import ExporterContext
 
 
+# pylint: disable=too-many-instance-attributes
 class TelegramDumper(TelegramClient):
     """ Authenticates and opens new session. Retrieves message history for a chat. """
+    BUFFER_SIZE = 1000
 
     def __init__(self, session_user_id, settings, metadata, exporter):
 
@@ -48,6 +50,7 @@ class TelegramDumper(TelegramClient):
         # The context that will be passed to the exporter
         self.exporter_context = ExporterContext()
         self.exporter_context.is_continue_mode = self.settings.is_incremental_mode
+        self.exporter_context.tg_client = self
 
         # How many massages user wants to be dumped
         # explicit --limit, or default of 100 or unlimited (int.Max)
@@ -59,7 +62,7 @@ class TelegramDumper(TelegramClient):
         # A list of paths to the temp files
         self.temp_files_list = deque()
 
-        # Actual lattets message id that was prossessed since the dumper started running
+        # Actual latest message id that was processed since the dumper started running
         self.cur_latest_message_id = self.settings.last_message_id
 
         # The number of messages written into a resulting file de-facto
@@ -72,14 +75,14 @@ class TelegramDumper(TelegramClient):
         try:
             self._init_connect()
             try:
-                chatObj = self._getChannel()
+                chat_obj = self._get_channel()
             except ValueError as ex:
                 ret_code = 1
                 self.logger.error('%s', ex,
                                   exc_info=self.logger.level > logging.INFO)
-                return
+                return ret_code
             # Fetch history in chunks and save it into a resulting file
-            self._do_dump(chatObj)
+            self._do_dump(chat_obj)
         except (DumpingError, MetadataError) as ex:
             self.logger.error('%s', ex, exc_info=self.logger.level > logging.INFO)
             ret_code = 1
@@ -135,13 +138,13 @@ class TelegramDumper(TelegramClient):
                                  "Please enter your password: ")
                     self_user = self.sign_in(password=pw)
 
-    def _getChannel(self):
+    def _get_channel(self):
         """ Returns telethon.tl.types.Channel object resolved from chat_name
             at Telegram server
         """
         name = self.settings.chat_name
 
-        # For private channуls try to resolve channel peer object from its invitation link
+        # For private channels try to resolve channel peer object from its invitation link
         # Note: it will only work if the login user has already joined the private channel.
         # Otherwise, get_entity will throw ValueError
         if name.startswith(JOIN_CHAT_PREFIX_URL):
@@ -179,7 +182,7 @@ class TelegramDumper(TelegramClient):
 
         # Search in dialogs first, this way we will find private groups and
         # channels.
-        self.logger.debug('Fetch loggedin user`s dialogs')
+        self.logger.debug('Fetch logged in user`s dialogs')
         dialogs_count = self.get_dialogs(0).total
         self.logger.info('%s user`s dialogs found', dialogs_count)
         dialogs = self.get_dialogs(limit=None)
@@ -260,7 +263,7 @@ class TelegramDumper(TelegramClient):
 
     def _do_dump(self, peer):
         """ Retrieves messages in small chunks (Default: 100) and saves them in in-memory 'buffer'.
-            When buffer reaches '1000' messages they are saved into intermediate temp file.
+            When buffer reaches BUFFER_SIZE messages they are saved into intermediate temp file.
             In the end messages from all the temp files are being moved into resulting file in
             ascending order along with the remaining ones in 'buffer'.
             After all, temp files are deleted.
@@ -279,7 +282,7 @@ class TelegramDumper(TelegramClient):
 
         # Current buffer of messages, that will be batched into a temp file
         # or otherwise written directly into the resulting file if there are too few of them
-        # to form a batch of size 1000.
+        # to form a batch of size BUFFER_SIZE.
         buffer = deque()
 
         # Delete old metafile in Continue mode
@@ -298,7 +301,7 @@ class TelegramDumper(TelegramClient):
                 latest_message_id_fetched = self._fetch_messages_from_server(
                     peer, buffer)
 
-                # This is for the case when buffer with fewer than 1000 records
+                # This is for the case when buffer with fewer than BUFFER_SIZE records
                 # Relies on the fact that `_fetch_messages_from_server` returns messages
                 # in reverse order
                 if self.cur_latest_message_id < latest_message_id_fetched:
@@ -306,7 +309,7 @@ class TelegramDumper(TelegramClient):
                 # when buffer is full, flush it into a temp file
                 # Assume that once a message got into temp file it will be counted as successful
                 # 'output_total_count'. This has to be improved.
-                if len(buffer) >= 1000:
+                if len(buffer) >= self.BUFFER_SIZE:
                     self._flush_buffer_in_temp_file(buffer)
                     temp_files_list_meta.append(latest_message_id_fetched)
                 # break if the very beginning of channel history is reached
@@ -338,7 +341,8 @@ class TelegramDumper(TelegramClient):
             self.output_total_count += self._flush_buffer_into_filestream(buffer, tf)
             self.temp_files_list.append(tf)
 
-    def _flush_buffer_into_filestream(self, buffer, file_stream):
+    @staticmethod
+    def _flush_buffer_into_filestream(buffer, file_stream):
         """ Flush buffer into a file stream """
         count = 0
         while buffer:
@@ -383,7 +387,7 @@ class TelegramDumper(TelegramClient):
         """ Check preconditions before processing data """
         out_file_path = self.settings.out_file
         if self.settings.is_incremental_mode:
-            # In incrimental mode
+            # In incremental mode
             sprint('Switching to incremental mode.')
             self.logger.debug('Checking if output file exists.')
             if not os.path.exists(out_file_path):
@@ -392,7 +396,7 @@ class TelegramDumper(TelegramClient):
             sprint('Dumping messages newer than {} using "{}" dumper.'
                    .format(self.settings.last_message_id, self.settings.exporter))
         else:
-            # In NONE-incrimental mode
+            # In NONE-incremental mode
             if os.path.exists(out_file_path):
                 sprint('Warning: The output file already exists.')
                 if not self._is_user_confirmed('Are you sure you want to overwrite it? [y/n]'):
@@ -412,6 +416,6 @@ class TelegramDumper(TelegramClient):
         """ Get confirmation from user """
         if self.settings.is_quiet_mode:
             return True
-        continueResponse = input(msg).lower().strip()
-        return continueResponse == 'y'\
-            or continueResponse == 'yes'
+        continue_response = input(msg).lower().strip()
+        return continue_response == 'y'\
+            or continue_response == 'yes'

@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=missing-docstring
 
+
 class ExporterContext:
     """ Exporter context """
 
-    # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-few-public-methods
     def __init__(self):
         # Is processing the first record
@@ -14,3 +14,5 @@ class ExporterContext:
         self.is_last_record = True
         # Is working in continue/incremental mode
         self.is_continue_mode = False
+        # TelegramClient instance
+        self.tg_client = None
