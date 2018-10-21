@@ -13,11 +13,8 @@ import logging
 from collections import deque
 from getpass import getpass
 from time import sleep
-from telethon import TelegramClient, ConnectionMode
-from telethon.errors import SessionPasswordNeededError
-from telethon.errors.rpc_error_list import FloodWaitError
-from telethon.errors.rpc_error_list import UsernameNotOccupiedError
-from telethon.errors.rpc_error_list import UsernameInvalidError
+from telethon import TelegramClient
+from telethon.errors import FloodWaitError, SessionPasswordNeededError, UsernameNotOccupiedError, UsernameInvalidError
 from telethon.tl.functions.contacts import ResolveUsernameRequest
 from telegram_messages_dump.utils import sprint
 from telegram_messages_dump.utils import JOIN_CHAT_PREFIX_URL
@@ -36,7 +33,6 @@ class TelegramDumper(TelegramClient):
         super().__init__(session_user_id,
                          settings.api_id,
                          settings.api_hash,
-                         connection_mode=ConnectionMode.TCP_FULL,
                          proxy=None,
                          update_workers=1)
 
@@ -193,7 +189,7 @@ class TelegramDumper(TelegramClient):
                 sprint('Dialog title "{}" resolved into channel id={}'.format(
                     name, dialog.entity.id))
                 return dialog.entity
-            if dialog.entity.username == name:
+            if hasattr(dialog.entity, 'username') and dialog.entity.username == name:
                 sprint('Dialog username "{}" resolved into channel id={}'.format(
                     name, dialog.entity.id))
                 return dialog.entity
@@ -275,6 +271,7 @@ class TelegramDumper(TelegramClient):
         """
         self.msg_count_to_process = self.settings.limit \
             if self.settings.limit != -1\
+            and not self.settings.limit == 0\
             and not self.settings.is_incremental_mode\
             else sys.maxsize
 
